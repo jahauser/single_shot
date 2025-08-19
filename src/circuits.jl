@@ -41,7 +41,7 @@ function basic_MWPM_sample(L::Int, T::Int, p::Float64, q::Float64, samples::Int)
     M1s = zeros(Float64, T+1)
     M2s = zeros(Float64, T+1)
     for i in 1:samples
-        Ms = basic_MWPM_circuit(L, T, p, q)
+        Ms = basic_MWPM_sample(L, T, p, q)
         M1s .+= Ms
         M2s .+= Ms.^2
     end
