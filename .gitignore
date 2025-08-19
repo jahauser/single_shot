@@ -1,0 +1,11 @@
+data/
+output/
+old_output/
+logs/
+containers/
+
+notebooks/.ipynb_checkpoints/
+
+# OS-generated files
+.DS_Store
+
