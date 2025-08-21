@@ -22,7 +22,7 @@ request_memory        = 8 GB
 request_disk          = 5GB
 
 # Container (pick ONE)
-container_image       = osdf:///ospool/ap40/data/jacob.hauser/julia-graphs-1.11.6-20250819.sif
+container_image       = osdf:///ospool/ap40/data/jacob.hauser/julia-test-1.11-20250821.sif
 
 # One job per line in params.txt
 queue params from jobs/params.txt
