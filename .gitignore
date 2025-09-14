@@ -1,6 +1,7 @@
 data/
 output/
 old_output/
+output_backup/
 logs/
 containers/
 

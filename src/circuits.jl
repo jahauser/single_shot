@@ -65,11 +65,39 @@ function MV_sample(L::Int, T::Int, p::Float64, q::Float64)
     return Ms
 end
 
+function harsh_MV_sample(L::Int, T::Int, p::Float64, q::Float64)
+    ρ = initialstate(L)
+    Ms = zeros(Float64, T+1)
+
+    Ms[1] = magnetization(ρ)
+
+    for t in 1:T
+        ρ = noiselayer(ρ, p)
+        checks = measure(ρ, q)
+        ρ = harsh_MV(ρ, checks)
+        Ms[t+1] = magnetization(ρ)
+    end
+    return Ms
+end
+
 function MV_sample(L::Int, T::Int, p::Float64, q::Float64, samples::Int)
     M1s = zeros(Float64, T+1)
     M2s = zeros(Float64, T+1)
     for _ in 1:samples
         Ms = MV_sample(L, T, p, q)
+        M1s .+= Ms
+        M2s .+= Ms.^2
+    end
+    M1s ./= samples
+    M2s ./= samples
+    return M1s, M2s
+end
+
+function harsh_MV_sample(L::Int, T::Int, p::Float64, q::Float64, samples::Int)
+    M1s = zeros(Float64, T+1)
+    M2s = zeros(Float64, T+1)
+    for _ in 1:samples
+        Ms = harsh_MV_sample(L, T, p, q)
         M1s .+= Ms
         M2s .+= Ms.^2
     end

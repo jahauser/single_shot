@@ -85,6 +85,11 @@ function heal(checks::Tuple, peff::Float64, q::Float64)
 
         path = enumerate_paths(fw)[site(L,charges[i]...)][site(L,charges[j]...)]
 
+        ## log...
+        # if match.weight > 0.0
+        #     println("wat")
+        # end
+
         sites = unsite.(L, path)
         steps = [((x1,y1),(x2,y2)) for ((x1,y1),(x2,y2)) in zip(sites[1:end-1], sites[2:end])]
         # println(steps)
@@ -219,6 +224,14 @@ function track_domains(checks::Tuple)
             end
         end
     end
+
+
+
+    # if sum(domain) > 0
+    #     println("...")
+    #         println(checks)
+    # println(domain)
+    # end
     return domain
 end
 

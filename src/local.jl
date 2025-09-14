@@ -10,3 +10,12 @@ function toom(ρ::AbstractMatrix, checks::Tuple)
     ρ = ρ .⊻ (vertical_checks .& horizontal_checks)
     return ρ
 end
+
+
+function harsh_MV(ρ::AbstractMatrix, checks::Tuple)
+    vertical_checks, horizontal_checks = checks
+    total = vertical_checks + horizontal_checks + circshift(vertical_checks,(1,0)) + circshift(horizontal_checks,(0,1))
+    ρ = ρ .⊻ (total .> 3)
+    # println(sum(total .> 3))
+    return ρ
+end
