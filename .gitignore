@@ -5,6 +5,10 @@ output_backup/
 logs/
 containers/
 
+25_11_12_output/
+25_11_13_output/
+25_11_17_output/
+
 notebooks/.ipynb_checkpoints/
 
 # OS-generated files

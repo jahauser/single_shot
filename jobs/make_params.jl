@@ -26,14 +26,37 @@ end
 # Define your sweeps here
 # -------------------------------
 
-algos    = ["MV", "basic_MWPM", "adv_MWPM"]
+# algos    = ["MV", "basic_MWPM", "adv_MWPM"]
 
-Ls       = collect(4:4:16)                  # example: 8,16,24,32,40
-T_of_L   = L -> 10L                      # example mapping; edit as needed
+# Ls       = collect(4:4:16)                  # example: 8,16,24,32,40
+# T_of_L   = L -> 10L                      # example mapping; edit as needed
 
-ps       = 0.0:0.05:0.5
-qs       = 0.0:0.05:0.3
-peffs(q) = collect(q:0.05:0.5)
+# ps       = 0.0:0.05:0.5
+# qs       = 0.0:0.05:0.3
+# peffs(q) = collect(q:0.05:0.5)
+
+# # per-L sampling and repeats (edit as needed)
+# samples  = Dict(
+#     4  => 100000,
+#     8 => 10000,
+#     12 => 1000,
+#     16 => 100,
+# )
+# repeats  = Dict(
+#     4 => 1,
+#     8  => 1,
+#     12 => 1,
+#     16 => 10,
+# )
+
+algos    = ["adv_MWPM"]
+
+Ls       = 4:4:24           # example: 8,16,24,32,40
+T_of_L   = L -> L                      # example mapping; edit as needed
+
+ps       = [0.05]
+qs       = 0.0:0.01:0.25
+peffs(q) = [q]
 
 # per-L sampling and repeats (edit as needed)
 samples  = Dict(
@@ -41,12 +64,16 @@ samples  = Dict(
     8 => 10000,
     12 => 1000,
     16 => 100,
+    20 => 100,
+    24 => 20,
 )
 repeats  = Dict(
     4 => 1,
     8  => 1,
-    12 => 1,
-    16 => 10,
+    12 => 2,
+    16 => 20,
+    20 => 20,
+    24 => 100,
 )
 
 append = false  # set true to append to existing params.txt
