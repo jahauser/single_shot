@@ -51,28 +51,28 @@ end
 
 algos    = ["adv_MWPM"]
 
-Ls       = 4:4:24           # example: 8,16,24,32,40
-T_of_L   = L -> L                      # example mapping; edit as needed
+Ls       = 8:8:24           # example: 8,16,24,32,40
+T_of_L   = L -> 10L                      # example mapping; edit as needed
 
-ps       = [0.05]
-qs       = 0.0:0.01:0.25
-peffs(q) = [q]
+ps       = [0.05, 0.1]
+qs       = 0.0:0.05:0.3
+peffs(p,q) = [q+2p*(1-p)]
 
 # per-L sampling and repeats (edit as needed)
 samples  = Dict(
-    4  => 100000,
-    8 => 10000,
-    12 => 1000,
-    16 => 100,
-    20 => 100,
-    24 => 20,
+    # 4  => 100000,
+    8 => 1000,
+    # 12 => 1000,
+    16 => 10,
+    # 20 => 100,
+    24 => 1,
 )
 repeats  = Dict(
-    4 => 1,
-    8  => 1,
-    12 => 2,
-    16 => 20,
-    20 => 20,
+    # 4 => 1,
+    8  => 10,
+    # 12 => 2,
+    16 => 10,
+    # 20 => 20,
     24 => 100,
 )
 
@@ -88,7 +88,7 @@ for L in Ls
     R = get(repeats, L, 1)
     for _ in 1:R, p in ps, q in qs, algo in algos
         if algo == "adv_MWPM"
-            for peff in peffs(q)
+            for peff in peffs(p,q)
                 push!(lines, format_line(algo, L, T, p, q; peff=peff, samples=S))
             end
         else
