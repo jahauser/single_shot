@@ -54,27 +54,37 @@ algos    = ["adv_MWPM"]
 Ls       = 8:8:24           # example: 8,16,24,32,40
 T_of_L   = L -> 10L                      # example mapping; edit as needed
 
-ps       = [0.05, 0.1]
+ps       = 0.0:0.02:0.5
 qs       = 0.0:0.05:0.3
-peffs(p,q) = [q+2p*(1-p)]
+peffs(p,q) = [q, q+2p*(1-p)*(1-2q), 0.4, 0.5]
 
 # per-L sampling and repeats (edit as needed)
 samples  = Dict(
     # 4  => 100000,
-    8 => 1000,
+    8 => 10000,
     # 12 => 1000,
-    16 => 10,
+    16 => 10000,
     # 20 => 100,
-    24 => 1,
+    24 => 1000,
 )
 repeats  = Dict(
     # 4 => 1,
-    8  => 10,
+    8  => 1,
     # 12 => 2,
-    16 => 10,
+    16 => 1,
     # 20 => 20,
-    24 => 100,
+    24 => 10,
 )
+
+# algos    = ["MV"]
+
+# Ls       = 8:8:104           # example: 8,16,24,32,40
+# T_of_L   = L -> L                      # example mapping; edit as needed
+
+# ps       = 0.0:0.01:0.3
+# qs       = 0.0:0.01:0.3
+# # peffs(p,q) = [q+2p*(1-p)]
+# samples = 10000
 
 append = false  # set true to append to existing params.txt
 
@@ -84,8 +94,8 @@ append = false  # set true to append to existing params.txt
 lines = String[]
 for L in Ls
     T = T_of_L(L)
-    S = get(samples, L, 1)
-    R = get(repeats, L, 1)
+    S = samples[L]
+    R = repeats[L]
     for _ in 1:R, p in ps, q in qs, algo in algos
         if algo == "adv_MWPM"
             for peff in peffs(p,q)

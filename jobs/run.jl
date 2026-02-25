@@ -7,7 +7,7 @@ using Printf
 using StatsBase
 using Graphs
 using SimpleWeightedGraphs
-using BlossomV
+# using BlossomV
 using GraphsMatching
 
 const ROOT = normpath(joinpath(@__DIR__, ".."))

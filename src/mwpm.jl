@@ -5,7 +5,7 @@ function detect_charges(horizontal_checks::AbstractMatrix, vertical_checks::Abst
 end
 
 prob_weight(x::Float64) = -log(x/(1-x))
-weight(peff::Float64, q::Float64, m::Bool) = (-1)^m * prob_weight(peff) + prob_weight(q)
+weight(peff::Float64, q::Float64, m::Bool) = q > 0 ? ((-1)^m * prob_weight(peff) + prob_weight(q)) : (m == true ? 0.0 : Inf)
 
 site(L,x,y) = L*(mod1(y,L)-1)+mod1(x,L)
 unsite(L,s) = (mod1(s,L), div(s-1,L)+1)
@@ -58,11 +58,10 @@ cyclicmax(L, a, b) = mod(a-b-1, L) == 0 ? a : b
 
 
 function heal(checks::Tuple, peff::Float64, q::Float64)
+    t1 = time()
     horizontal_checks, vertical_checks = deepcopy(boundary_filter(checks))
     L = size(horizontal_checks)[1]
     charges = detect_charges(horizontal_checks, vertical_checks)
-
-    # println(charges)
 
     if length(charges) == 0
         return horizontal_checks, vertical_checks
@@ -72,39 +71,41 @@ function heal(checks::Tuple, peff::Float64, q::Float64)
     fw = floyd_warshall_shortest_paths(g)
     match = match_charges(fw, charges, L)
 
-    mated = Int[]
+    horizontal_checks, vertical_checks = apply_paths((horizontal_checks, vertical_checks), fw, match, charges, L)
 
+
+    return horizontal_checks, vertical_checks
+end
+
+function apply_paths(checks::Tuple, fw::Graphs.FloydWarshallState, match::MatchingResult, charges::Vector, L::Int)
+    horizontal_checks, vertical_checks = checks
+    mated = Int[]
+    
 
     for i in 1:length(charges)
         j = match.mate[i]
         if j in mated
             continue
         end
-
-        # println(charges[i], charges[j])
-
-        path = enumerate_paths(fw)[site(L,charges[i]...)][site(L,charges[j]...)]
-
-        ## log...
-        # if match.weight > 0.0
-        #     println("wat")
-        # end
-
-        sites = unsite.(L, path)
-        steps = [((x1,y1),(x2,y2)) for ((x1,y1),(x2,y2)) in zip(sites[1:end-1], sites[2:end])]
-        # println(steps)
-        for ((x1, y1), (x2, y2)) in steps
+        
+        s0 = site(L, charges[i]...)
+        s2 = site(L, charges[j]...)
+        while s0 != s2
+            s1 = fw.parents[s0, s2]
+            x1, y1 = unsite(L, s1)
+            x2, y2 = unsite(L, s2)
             if x1 == x2
                 vertical_checks[cyclicmax(L, y1, y2), x1] ⊻= true
             elseif y1 == y2
                 horizontal_checks[y1, cyclicmax(L, x1, x2)] ⊻= true
             end
+
+            s2 = s1
         end
 
         push!(mated, i)
         push!(mated, j)
     end
-
     return horizontal_checks, vertical_checks
 end
 
