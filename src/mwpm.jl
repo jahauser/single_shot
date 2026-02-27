@@ -29,18 +29,60 @@ function build_matching_graph(checks::Tuple, peff::Float64, q::Float64)
     return SimpleWeightedGraph([sources; sources], [horizontal_destinations; vertical_destinations], [horizontal_weights; vertical_weights])
 end
 
-function match_charges(fw::Graphs.FloydWarshallState, charges::Vector, L::Int; depth=50)
+function build_matching_graph_syndrome_only(checks::Tuple)
+horizontal_checks, vertical_checks = checks
+    L = size(horizontal_checks, 1)
+
+    srcs  = Int[]
+    dsts  = Int[]
+    wts   = Float64[]
+
+    # horizontal edges
+    for y in 1:L-1, x in 1:L
+        if horizontal_checks[y,x]
+            push!(srcs, site(L, mod1(x-1,L), y))
+            push!(dsts, site(L, x, y))
+            push!(wts, 1.0)
+        end
+    end
+    for x in 1:L
+        push!(srcs, site(L, mod1(x-1,L), L))
+        push!(dsts, site(L, x, L))
+        push!(wts, 0.0)
+    end
+
+    # vertical edges
+    for y in 1:L, x in 1:L-1
+        if vertical_checks[y,x]
+            push!(srcs, site(L, x, mod1(y-1,L)))
+            push!(dsts, site(L, x, y))
+            push!(wts, 1.0)
+        end
+    end
+    for y in 1:L
+        push!(srcs, site(L, L, mod1(y-1,L)))
+        push!(dsts, site(L, L, y))
+        push!(wts, 0.0)
+    end
+
+    return SimpleWeightedGraph(srcs, dsts, wts)
+end
+
+function match_charges(fw::Graphs.FloydWarshallState, charges::Vector, L::Int)
     subgraph = complete_graph(length(charges))
+    # println(length(charges))
     weights = Dict{Edge,Float64}()
     for i in 1:length(charges)-1
         for j in i+1:length(charges)
-            # if fw.dists[charges[i],charges[j]] < Inf
+            if fw.dists[site(L,charges[i]...),site(L,charges[j]...)] < Inf
                 weights[Edge(i, j)] = fw.dists[site(L,charges[i]...),site(L,charges[j]...)]
-            # end
+            else
+                weights[Edge(i, j)] = 1000.0
+            end
         end
     end
 
-    match = minimum_weight_perfect_matching(subgraph, weights, depth)
+    match = minimum_weight_perfect_matching(subgraph, weights)
     return match
 end
 
@@ -67,7 +109,12 @@ function heal(checks::Tuple, peff::Float64, q::Float64)
         return horizontal_checks, vertical_checks
     end
     
-    g = build_matching_graph((horizontal_checks, vertical_checks), peff, q)
+    if peff > q
+        g = build_matching_graph((horizontal_checks, vertical_checks), peff, q)
+    else
+        # println("yup")
+        g = build_matching_graph_syndrome_only((horizontal_checks, vertical_checks))
+    end
     fw = floyd_warshall_shortest_paths(g)
     match = match_charges(fw, charges, L)
 
@@ -81,6 +128,7 @@ function apply_paths(checks::Tuple, fw::Graphs.FloydWarshallState, match::Matchi
     horizontal_checks, vertical_checks = checks
     mated = Int[]
     
+    backup_checks = deepcopy(checks)
 
     for i in 1:length(charges)
         j = match.mate[i]
@@ -91,6 +139,37 @@ function apply_paths(checks::Tuple, fw::Graphs.FloydWarshallState, match::Matchi
         s0 = site(L, charges[i]...)
         s2 = site(L, charges[j]...)
         while s0 != s2
+            # println("c0: $(charges[i]) -> s0: $s0, c2: $(charges[j]) -> s2: $s2")
+            # println("s0: $s0, s2: $s2")
+
+            if s2 == 0
+                println(fw.dists[site(L, charges[i]...), site(L, charges[j]...)])
+                println("s0: $(site(L, charges[i]...)), s2: $(site(L, charges[j]...))")
+                println("charges[i]: $(charges[i]), charges[j]: $(charges[j])")
+                println("match.mate[i]: $(match.mate[i])")
+                println("match.mate[i]: $(charges[match.mate[i]])")
+                println("$(match.weight)")
+
+                backup_horizontal_checks, backup_vertical_checks = backup_checks
+                g = build_matching_graph_syndrome_only((backup_horizontal_checks, backup_vertical_checks))
+                backup_fw = floyd_warshall_shortest_paths(g)
+                println("backup_fw.dists[site(L, charges[i]...), site(L, charges[j]...)]: ", backup_fw.dists[site(L, charges[i]...), site(L, charges[j]...)])
+
+                subgraph = complete_graph(length(charges))
+                weights = Dict{Edge,Float64}()
+                for i in 1:length(charges)-1
+                    for j in i+1:length(charges)
+                        weights[Edge(i, j)] = backup_fw.dists[site(L,charges[i]...),site(L,charges[j]...)]
+                    end
+                end
+
+                println(weights[Edge(i, j)])
+                println([(charges[i], charges[match.mate[i]], weights[Edge(i, match.mate[i])]) for i in 1:length(charges) if i < match.mate[i]])
+                println(backup_horizontal_checks)
+                println(backup_vertical_checks)
+        
+            end
+
             s1 = fw.parents[s0, s2]
             x1, y1 = unsite(L, s1)
             x2, y2 = unsite(L, s2)

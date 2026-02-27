@@ -2,7 +2,7 @@
 using JLD2
 using Glob
 
-outdir = joinpath(@__DIR__, "..", "output")
+outdir = joinpath(@__DIR__, "..", "Feb_25_MWPM_data")
 files = glob("*.jld2", outdir)
 
 if isempty(files)
