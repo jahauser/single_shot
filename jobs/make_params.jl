@@ -55,7 +55,7 @@ Ls       = 8:8:24           # example: 8,16,24,32,40
 T_of_L   = L -> 10L                      # example mapping; edit as needed
 
 ps       = 0.0:0.02:0.5
-qs       = 0.0:0.05:0.3
+qs       = 0.01:0.05:0.3
 peffs(p,q) = [q, q+2p*(1-p)*(1-2q), 0.4, 0.5]
 
 # per-L sampling and repeats (edit as needed)
