@@ -5,7 +5,7 @@
 # Collates all .jld2 files in <output_dir> into a single collated_results.jld2.
 # Files sharing the same (tag, algo, L, T, p, q, c) key are merged:
 #   - (1) M1s, M2s, E1s, E2s: weighted-averaged time series
-#   - (2) Ms_snapshots, Es_snapshots: concatenated across files (rows = samples)
+#   - (2) Ms_hist, Es_hist: elementwise-summed histograms (same L guaranteed by key)
 #   - (3) instant_failures: weighted-averaged time series
 #   - (4) cumulative_failures: weighted-averaged time series
 
@@ -29,7 +29,7 @@ end
 results = Dict{NTuple{7,Any}, NamedTuple}()
 
 for f in files
-    @load f algo L T p q c samples tag M1s M2s E1s E2s instant_failures cumulative_failures Ms_snapshots Es_snapshots dt
+    @load f algo L T p q c samples tag M1s M2s E1s E2s instant_failures cumulative_failures Ms_hist Es_hist dt
     key = (tag, algo, L, T, p, q, c)
 
     if !haskey(results, key)
@@ -40,8 +40,8 @@ for f in files
             sum_E2              = samples .* copy(E2s),
             sum_instant_fail    = samples .* instant_failures,
             sum_cumulative_fail = samples .* cumulative_failures,
-            Ms_snapshots        = copy(Ms_snapshots),
-            Es_snapshots        = copy(Es_snapshots),
+            Ms_hist             = copy(Ms_hist),
+            Es_hist             = copy(Es_hist),
             total_samples       = samples,
             total_time          = float(dt),
         )
@@ -54,8 +54,8 @@ for f in files
             sum_E2              = r.sum_E2 .+ samples .* E2s,
             sum_instant_fail    = r.sum_instant_fail .+ samples .* instant_failures,
             sum_cumulative_fail = r.sum_cumulative_fail .+ samples .* cumulative_failures,
-            Ms_snapshots        = vcat(r.Ms_snapshots, Ms_snapshots),
-            Es_snapshots        = vcat(r.Es_snapshots, Es_snapshots),
+            Ms_hist             = r.Ms_hist .+ Ms_hist,
+            Es_hist             = r.Es_hist .+ Es_hist,
             total_samples       = r.total_samples + samples,
             total_time          = r.total_time + dt,
         )
@@ -71,8 +71,8 @@ for (key, r) in results
         E2s                 = r.sum_E2 ./ r.total_samples,
         instant_failures    = r.sum_instant_fail ./ r.total_samples,
         cumulative_failures = r.sum_cumulative_fail ./ r.total_samples,
-        Ms_snapshots        = r.Ms_snapshots,
-        Es_snapshots        = r.Es_snapshots,
+        Ms_hist             = r.Ms_hist,
+        Es_hist             = r.Es_hist,
         total_samples       = r.total_samples,
         total_time          = r.total_time,
     )

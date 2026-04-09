@@ -38,6 +38,10 @@ function sample(L::Int, T::Int, p::Float64, q::Float64, decoder::AbstractDecoder
     Ms = zeros(Float64, T+1)
     Es = zeros(Float64, T+1)
 
+
+    Ms[1] = magnetization(ρ)
+    Es[1] = energy(ρ)
+
     for t in 1:T
         ρ = noiselayer(ρ, p)
         checks = measure(ρ, q)
@@ -53,15 +57,24 @@ function sample(L::Int, T::Int, p::Float64, q::Float64, decoder::AbstractDecoder
     snapshot_ts  = 0:L:T
     n_snapshots  = length(snapshot_ts)
 
+    # histogram bin counts:
+    #   M = k/L² for k in 0:L²  =>  n_M_bins = L²+1
+    #   E is even integer in [-2L(L-1), 2L(L-1)]  =>  n_E_bins = 2L(L-1)+1
+    # bin index helpers (1-based):
+    #   M_bin(M) = round(Int, M * L²) + 1
+    #   E_bin(E) = round(Int, E) ÷ 2 + L*(L-1) + 1
+    n_M_bins = L^2 + 1
+    n_E_bins = 2*L*(L-1) + 1
+
     # (1) averaged time series
     M1s = zeros(Float64, T+1)
     M2s = zeros(Float64, T+1)
     E1s = zeros(Float64, T+1)
     E2s = zeros(Float64, T+1)
 
-    # (2) per-sample snapshots every L steps: shape (samples × n_snapshots)
-    Ms_snapshots = zeros(Float64, samples, n_snapshots)
-    Es_snapshots = zeros(Float64, samples, n_snapshots)
+    # (2) histograms at each snapshot: shape (n_bins × n_snapshots)
+    Ms_hist = zeros(Int32, n_M_bins, n_snapshots)
+    Es_hist = zeros(Int32, n_E_bins, n_snapshots)
 
     # (3) averaged instant failure rate at each timestep
     instant_failures    = zeros(Float64, T+1)
@@ -80,8 +93,8 @@ function sample(L::Int, T::Int, p::Float64, q::Float64, decoder::AbstractDecoder
 
         # (2)
         for (si, t) in enumerate(snapshot_ts)
-            Ms_snapshots[i, si] = Ms[t+1]
-            Es_snapshots[i, si] = Es[t+1]
+            Ms_hist[round(Int, Ms[t+1] * L^2) + 1, si] += one(Int32)
+            Es_hist[round(Int, Es[t+1]) ÷ 2 + L*(L-1) + 1, si] += one(Int32)
         end
 
         # (3)
@@ -102,5 +115,5 @@ function sample(L::Int, T::Int, p::Float64, q::Float64, decoder::AbstractDecoder
     instant_failures   ./= samples
     cumulative_failures ./= samples
 
-    return M1s, M2s, E1s, E2s, instant_failures, cumulative_failures, Ms_snapshots, Es_snapshots
+    return M1s, M2s, E1s, E2s, instant_failures, cumulative_failures, Ms_hist, Es_hist
 end

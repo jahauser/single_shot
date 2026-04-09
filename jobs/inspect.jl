@@ -14,7 +14,7 @@ if isempty(ARGS)
 end
 
 for fname in ARGS
-    @load fname algo L T p q c peff samples tag M1s M2s E1s E2s instant_failures cumulative_failures Ms_snapshots Es_snapshots dt
+    @load fname algo L T p q c peff samples tag M1s M2s E1s E2s instant_failures cumulative_failures Ms_hist Es_hist dt
 
     println("File:     ", fname)
     println("Tag:      ", isempty(tag) ? "(none)" : tag)
@@ -32,8 +32,13 @@ for fname in ARGS
     println("  instant failure rate:        $(@sprintf("%.6f", instant_failures[end]))")
     println("  cumulative failure rate:     $(@sprintf("%.6f", cumulative_failures[end]))")
     println()
-    println("Snapshot distributions (t=T, i.e. last snapshot):")
-    println("  M  min/median/max:  $(@sprintf("%.4f", minimum(Ms_snapshots[:,end]))) / $(@sprintf("%.4f", median(Ms_snapshots[:,end]))) / $(@sprintf("%.4f", maximum(Ms_snapshots[:,end])))")
-    println("  E  min/median/max:  $(@sprintf("%.4f", minimum(Es_snapshots[:,end]))) / $(@sprintf("%.4f", median(Es_snapshots[:,end]))) / $(@sprintf("%.4f", maximum(Es_snapshots[:,end])))")
+    # Reconstruct bin edges from L and report mode of final snapshot histogram
+    M_edges = (0:L^2) ./ L^2
+    E_edges = (-2*L*(L-1):2:2*L*(L-1))
+    M_mode  = M_edges[argmax(Ms_hist[:, end])]
+    E_mode  = E_edges[argmax(Es_hist[:, end])]
+    println("Snapshot histograms (t=T, last snapshot):")
+    println("  M  mode: $(@sprintf("%.4f", M_mode))  ($(sum(Ms_hist[:,end])) counts)")
+    println("  E  mode: $(@sprintf("%.1f", Float64(E_mode)))  ($(sum(Es_hist[:,end])) counts)")
     println("-"^60)
 end

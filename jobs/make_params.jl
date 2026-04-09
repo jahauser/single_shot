@@ -27,33 +27,17 @@ end
 # Define your sweeps here
 # -------------------------------
 
-algos   = ["IsingML"]
-tag     = ""           # label for this batch of jobs, e.g. "sweep_Mar25"
+algos   = ["MV"]
+tag     = "MV_L80_sweep"
 
-Ls      = 8:8:24
-T_of_L  = L -> 10L
+Ls      = [80]
+T_of_L  = L -> 20L
 
-ps      = 0.0:0.02:0.5
-qs      = 0.01:0.05:0.3
+ps      = 0.0:0.01:0.5
+qs      = 0.0:0.01:0.5
 
-# c = (peff - q) / (0.5 - q), so the four sweep points simplify to:
-#   peff = q                  -> c = 0
-#   peff = q + 2p(1-p)(1-2q) -> c = 4p(1-p)   [the (0.5-q) cancels]
-#   peff = 0.4                -> c = (0.4-q)/(0.5-q)
-#   peff = 0.5                -> c = 1
-cs(p, q) = [0.0, 4p*(1-p), (0.4-q)/(0.5-q), 1.0]
-
-# per-L sampling and repeats
-samples = Dict(
-    8  => 10000,
-    16 => 10000,
-    24 => 1000,
-)
-repeats = Dict(
-    8  => 1,
-    16 => 1,
-    24 => 10,
-)
+samples = Dict(80 => 100000)
+repeats = Dict(80 => 1)
 
 append = false  # set true to append to existing params.txt
 
@@ -66,13 +50,7 @@ for L in Ls
     S = samples[L]
     R = repeats[L]
     for _ in 1:R, p in ps, q in qs, algo in algos
-        if algo == "IsingML"
-            for c in cs(p, q)
-                push!(lines, format_line(algo, L, T, p, q; c=c, samples=S, tag=tag))
-            end
-        else
-            push!(lines, format_line(algo, L, T, p, q; samples=S, tag=tag))
-        end
+        push!(lines, format_line(algo, L, T, p, q; samples=S, tag=tag))
     end
 end
 

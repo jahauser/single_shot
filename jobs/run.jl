@@ -80,7 +80,7 @@ function main(args)
     sample(2, 2, 0.0, 0.0, decoder, 1)
 
     t0 = time()
-    M1s, M2s, E1s, E2s, instant_failures, cumulative_failures, Ms_snapshots, Es_snapshots = sample(L, T, p, q, decoder, samples)
+    M1s, M2s, E1s, E2s, instant_failures, cumulative_failures, Ms_hist, Es_hist = sample(L, T, p, q, decoder, samples)
     dt = time() - t0
 
     peff = algo == "IsingML" ? q + c * (0.5 - q) : NaN
@@ -91,7 +91,7 @@ function main(args)
     ts    = Dates.format(Dates.now(), "yyyymmdd_HHMMSS")
     fname = joinpath(outdir, "sample_$(fname_tag)_$(ts)_$(rand(UInt32)).jld2")
 
-    @save fname algo L T p q c peff samples tag M1s M2s E1s E2s instant_failures cumulative_failures Ms_snapshots Es_snapshots dt
+    @save fname algo L T p q c peff samples tag M1s M2s E1s E2s instant_failures cumulative_failures Ms_hist Es_hist dt
     println("Wrote: ", fname)
 end
 
