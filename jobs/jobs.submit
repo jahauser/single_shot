@@ -17,8 +17,8 @@ log                   = logs/$(Cluster).log
 +JobDurationCategory = "Medium"
 
 # Resources (tune)
-request_cpus          = 8
-request_memory        = 8 GB
+request_cpus          = 1
+request_memory        = 4 GB
 request_disk          = 5GB
 
 # Container (pick ONE)

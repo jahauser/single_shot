@@ -13,9 +13,16 @@ function magnetization(ρ::AbstractMatrix)
     return mean(ρ)
 end
 
-# WARNING: now "horizontal" and "vertical" are on the dual lattice; also now open boundary conditions
 function measure(ρ::AbstractMatrix, q::Float64)
     horizontal_checks = noiselayer(ρ .⊻ circshift(ρ,(-1,0)),q)
     vertical_checks = noiselayer(ρ .⊻ circshift(ρ,(0,-1)),q)
     return horizontal_checks, vertical_checks
+end
+
+function energy(ρ::AbstractMatrix)
+    horizontal_checks, vertical_checks = measure(ρ, 0.0)
+    horizontal_ss = sum(1 .- 2*horizontal_checks[1:end-1,:])
+    vertical_ss = sum(1 .- 2*vertical_checks[:,1:end-1])
+
+    return horizontal_ss + vertical_ss
 end
