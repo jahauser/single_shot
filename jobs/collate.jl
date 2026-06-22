@@ -27,11 +27,20 @@ if isempty(files)
 end
 
 results = Dict{NTuple{7,Any}, NamedTuple}()
+skipped = String[]
 
 for f in files
-    @load f algo L T p q c samples tag M1s M2s E1s E2s instant_failures cumulative_failures Ms_hist Es_hist dt
-    key = (tag, algo, L, T, p, q, c)
+    local algo, L, T, p, q, c, samples, tag, M1s, M2s, E1s, E2s
+    local instant_failures, cumulative_failures, Ms_hist, Es_hist, dt
+    try
+        @load f algo L T p q c samples tag M1s M2s E1s E2s instant_failures cumulative_failures Ms_hist Es_hist dt
+    catch e
+        @warn "Skipping corrupt/incomplete file" file=f exception=e
+        push!(skipped, f)
+        continue
+    end
 
+    key = (tag, algo, L, T, p, q, c)
     if !haskey(results, key)
         results[key] = (
             sum_M1              = samples .* copy(M1s),
@@ -62,6 +71,16 @@ for f in files
     end
 end
 
+if !isempty(skipped)
+    println("Skipped $(length(skipped)) unreadable file(s):")
+    foreach(f -> println("  ", f), skipped)
+end
+
+if isempty(results)
+    println("No valid data loaded — aborting.")
+    exit(1)
+end
+
 # Normalise weighted sums to weighted averages
 for (key, r) in results
     results[key] = (
@@ -80,4 +99,4 @@ end
 
 outfile = joinpath(outdir, "collated_results.jld2")
 @save outfile results
-println("Collated $(length(results)) parameter sets from $(length(files)) files -> ", outfile)
+println("Collated $(length(results)) parameter sets from $(length(files) - length(skipped)) files -> ", outfile)

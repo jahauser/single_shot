@@ -112,6 +112,7 @@ function heal(checks::Tuple, peff::Float64, q::Float64)
     else
         g = build_matching_graph_syndrome_only((horizontal_checks, vertical_checks))
     end
+    # println(g)
     fw = floyd_warshall_shortest_paths(g)
     match = match_charges(fw, charges, L)
 
